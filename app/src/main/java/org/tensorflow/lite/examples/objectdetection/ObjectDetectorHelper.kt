@@ -91,7 +91,8 @@ class ObjectDetectorHelper(
                 MODEL_EFFICIENT_TEST -> "detect.tflite"
                 else -> "mobilenetv1.tflite"
             }
-
+        //使用自己的模型
+//        val modelName ="detect.tflite"
         try {
             objectDetector =
                 ObjectDetector.createFromFileAndOptions(context, modelName, optionsBuilder.build())
