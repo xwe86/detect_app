@@ -38,7 +38,34 @@
         app:navGraph="@navigation/nav_graph"
         tools:context=".MainActivity"/>
 
-<!--        <androidx.appcompat.widget.Toolbar-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:onClick="front"
+                android:text="身份证正面"
+                android:textSize="16sp"/>
+
+            <Button
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginLeft="10dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:onClick="back"
+                android:text="身份证反面"
+                android:textSize="16sp"/>
+        </LinearLayout>
+
+
+        <!--        <androidx.appcompat.widget.Toolbar-->
 <!--            android:id="@+id/toolbar"-->
 <!--            android:layout_width="match_parent"-->
 <!--            android:layout_height="?attr/actionBarSize"-->

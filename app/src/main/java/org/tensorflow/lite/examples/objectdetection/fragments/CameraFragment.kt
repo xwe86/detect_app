@@ -15,6 +15,10 @@
  */
 package org.tensorflow.lite.examples.objectdetection.fragments
 
+import android.animation.AnimatorInflater
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Configuration
@@ -22,32 +26,28 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import android.widget.AdapterView
+import android.view.animation.LinearInterpolator
+import android.widget.ImageView
 import android.widget.Toast
-import androidx.camera.core.AspectRatio
-import androidx.camera.core.Camera
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.*
 import androidx.camera.core.ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888
-import androidx.camera.core.ImageProxy
-import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
-import java.util.LinkedList
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import org.tensorflow.lite.examples.objectdetection.ObjectDetectorHelper
 import org.tensorflow.lite.examples.objectdetection.R
+import org.tensorflow.lite.examples.objectdetection.databinding.ActivityMainBinding
 import org.tensorflow.lite.examples.objectdetection.databinding.FragmentCameraBinding
 import org.tensorflow.lite.task.vision.detector.Detection
+import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
 
     private val TAG = "ObjectDetection"
     private lateinit var windowManager: WindowManager
-
     private var _fragmentCameraBinding: FragmentCameraBinding? = null
 
     private val fragmentCameraBinding
@@ -89,6 +89,22 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
         _fragmentCameraBinding = FragmentCameraBinding.inflate(inflater, container, false)
         windowManager =  requireContext().getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
+        val animatorSet = AnimatorSet()
+
+        val imageView = fragmentCameraBinding.arrowLeft
+        val translationAnim = ObjectAnimator.ofFloat(imageView, "translationX", 400f, 200f)
+//        translationAnim.repeatMode = ValueAnimator.REVERSE // 设置重复模式为倒序
+        translationAnim.repeatCount = ValueAnimator.INFINITE // 设置重复次数为无限
+        translationAnim.duration = 1000 // 设置动画持续时间
+        translationAnim.interpolator = LinearInterpolator() // 设置插值器，可以使动画匀速播放
+
+        val alphaAnim = ObjectAnimator.ofFloat(imageView, "alpha", 1.0f, 0.0f)
+        alphaAnim.repeatCount = ValueAnimator.INFINITE
+        alphaAnim.duration = 1000
+
+        animatorSet.playTogether(translationAnim, alphaAnim)
+        // 设置目标View,播放动画
+        animatorSet.start()
         return fragmentCameraBinding.root
     }
 
@@ -108,6 +124,7 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
             // Set up the camera and its use cases
             setUpCamera()
         }
+
 
         // Attach listeners to UI control widgets
 //        initBottomSheetControls()
@@ -221,6 +238,13 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
             ContextCompat.getMainExecutor(requireContext())
         )
     }
+    // 获取当前屏幕方向
+    fun isLandscape(): Boolean {
+        val orientation = resources.configuration.orientation
+        return orientation == Configuration.ORIENTATION_LANDSCAPE
+    }
+
+// 在 Activity 中调用 isLandscape() 函数判断屏幕方向
 
     // Declare and bind preview, capture and analysis use cases
     @SuppressLint("UnsafeOptInUsageError")
@@ -238,7 +262,7 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
         preview =
             Preview.Builder()
                 .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                .setTargetRotation(Surface.ROTATION_0)
+                .setTargetRotation(Surface.ROTATION_90)
                 .build()
         // 获取屏幕旋转角度
         val rotation = when (windowManager.defaultDisplay.rotation) {
@@ -251,11 +275,19 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
         Log.d("相机","屏幕旋转的角度：${rotation}")
 
 
+// 在 Activity 中调用 isLandscape() 函数判断屏幕方向
+        if (isLandscape()) {
+            // 屏幕为横屏
+            // 执行横屏时的逻辑
+        } else {
+            // 屏幕为竖屏
+            // 执行竖屏时的逻辑
+        }
         //   分析相机捕获的图像帧 ImageAnalysis. Using RGBA 8888 to match how our models work
         imageAnalyzer =
             ImageAnalysis.Builder()
                 .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                .setTargetRotation(Surface.ROTATION_0)
+                .setTargetRotation(Surface.ROTATION_90)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setOutputImageFormat(OUTPUT_IMAGE_FORMAT_RGBA_8888)
                 .build()
@@ -318,6 +350,7 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
 //                            String.format("%d ms", inferenceTime)
             fragmentCameraBinding.inferenceTimeVal.text =
                     String.format("%d ms", inferenceTime)
+
             // Pass necessary information to OverlayView for drawing on the canvas
             fragmentCameraBinding.overlay.setResults(
                 results ?: LinkedList<Detection>(),

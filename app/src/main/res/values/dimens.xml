@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
     ~ Copyright 2022 The TensorFlow Authors. All Rights Reserved.
     ~
     ~ Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +17,7 @@
 
     <dimen name="stroke_small">4dp</dimen>
     <dimen name="round_button_medium">64dp</dimen>
-
+    <dimen name="detect_tip_text_size">20sp</dimen>
     <!-- Bottom Sheet -->
     <dimen name="bottom_sheet_text_size">18sp</dimen>
     <dimen name="bottom_sheet_padding">16dp</dimen>

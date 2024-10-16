@@ -23,6 +23,7 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import androidx.core.content.ContextCompat
 import java.util.LinkedList
@@ -90,13 +91,16 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
             textBackgroundPaint.getTextBounds(drawableText, 0, drawableText.length, bounds)
             val textWidth = bounds.width()
             val textHeight = bounds.height()
+            val rightPoint = left + textWidth + Companion.BOUNDING_RECT_TEXT_PADDING
+            val bottomPoint = top + textHeight + Companion.BOUNDING_RECT_TEXT_PADDING
             canvas.drawRect(
                 left,
                 top,
-                left + textWidth + Companion.BOUNDING_RECT_TEXT_PADDING,
-                top + textHeight + Companion.BOUNDING_RECT_TEXT_PADDING,
+                rightPoint,
+                bottomPoint,
                 textBackgroundPaint
             )
+            Log.d("绘图层","位置数据 left:${left} top:${top} right: ${rightPoint}, bottome: ${bottomPoint} ")
 
             // Draw text for detected object
             canvas.drawText(drawableText, left, top + bounds.height(), textPaint)

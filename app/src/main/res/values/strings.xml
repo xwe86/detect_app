@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
     ~ Copyright 2022 The TensorFlow Authors. All Rights Reserved.
     ~
     ~ Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +36,9 @@
     <string name="label_threads">Number of Threads</string>
     <string name="label_delegate">Delegate</string>
     <string name="label_models">ML Model</string>
-
+    <string name="touch_to_focus">触摸屏幕对焦</string>
+    <string name="crop_fail">裁剪失败</string>
+    <string name="no_flash">该设备不支持闪光灯</string>
     <string-array name="delegate_spinner_titles">
         <item>CPU</item>
         <item>GPU</item>
