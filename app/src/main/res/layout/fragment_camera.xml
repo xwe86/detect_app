@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
     ~ Copyright 2022 The TensorFlow Authors. All Rights Reserved.
     ~
     ~ Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,109 +15,156 @@
 -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/camera_container"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:layoutDirection="ltr">
 
     <androidx.camera.view.PreviewView
         android:id="@+id/view_finder"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:scaleType="fillStart"/>
+        app:scaleType="fillStart">
+
+
+    </androidx.camera.view.PreviewView>
+
     <TextView
         android:id="@+id/inference_time_val"
-        android:text="0ms"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="end"
+        android:layout_height="340dp"
         android:layout_centerVertical="true"
+        android:gravity="end"
+        android:text="0ms"
         android:textColor="@color/bottom_sheet_text_color"
         android:textSize="@dimen/bottom_sheet_text_size" />
-    <TextView
-        android:id="@+id/detect_tip"
-        android:text="识别提示"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="end"
-        android:layout_centerVertical="true"
-        android:textColor="@color/bottom_sheet_text_color"
-        android:textSize="@dimen/detect_tip_text_size" />
+
 
 
 
     <org.tensorflow.lite.examples.objectdetection.OverlayView
         android:id="@+id/overlay"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_width="match_parent" />
+        app:layout_anchor="@+id/view_finder"
+        app:layout_anchorGravity="center" />
+
+
+
+<!--指示图和 提示文案-->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/detect_tip"
+            android:layout_width="100dp"
+            android:layout_height="80dp"
+            android:layout_marginLeft="-10dp"
+            android:layout_marginTop="300dp"
+            android:rotation="90"
+            android:text="识别提示"
+            android:textAlignment="viewStart"
+            android:textColor="@color/detect_tip"
+            android:textSize="@dimen/detect_tip_text_size"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/detect_data"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="0dp"
+            android:layout_marginTop="30dp"
+            android:ellipsize="end"
+            android:rotation="90"
+            android:text="识别结果："
+            android:textColor="@color/detect_data"
+            android:textSize="@dimen/detect_tip_text_size"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent" />
+
+
+
+        <ImageView
+            android:id="@+id/arrow_bottom"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/arrow_bottom"
+            android:layout_marginLeft="310dp"
+            android:layout_marginTop="680dp"
+            android:visibility="invisible"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true" />
+
+
+        <ImageView
+            android:id="@+id/arrow_left"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/arrow_left"
+            android:layout_marginLeft="200dp"
+            android:visibility="invisible"
+            android:layout_marginTop="20dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"/>
+
+        <ImageView
+            android:id="@+id/arrow_right"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/arrow_right"
+            android:visibility="invisible"
+            android:layout_marginLeft="220dp"
+            android:layout_marginTop="20dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true" />
+
+        <ImageView
+            android:id="@+id/arrow_top"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/arrow_top"
+            android:layout_marginLeft="310dp"
+            android:layout_marginTop="200dp"
+            android:visibility="invisible"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true" />
+
+    </RelativeLayout>
 
 
     <ImageView
-        android:id="@+id/arrow_left"
-        android:layout_marginTop="20dp"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_marginRight="20dp"
-        android:src="@drawable/arrow_left"/>
+        android:id="@+id/car_bg"
+        android:layout_width="640dp"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="-90dp"
 
-    <!--右侧操作布局-->
-<!--    <FrameLayout-->
-<!--        android:id="@+id/fl_camera_option"-->
-<!--        android:layout_width="136dp"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:background="@color/preview_mock">-->
+        android:rotation="90"
+        android:src="@drawable/bg" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <!-- Camera control and gallery buttons -->
 
-<!--        &lt;!&ndash;拍照前操作布局&ndash;&gt;-->
-<!--        <LinearLayout-->
-<!--            android:id="@+id/ll_camera_option"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="match_parent"-->
-<!--            android:gravity="center"-->
-<!--            android:orientation="vertical">-->
 
-<!--            <ImageView-->
-<!--                android:id="@+id/iv_camera_flash"-->
-<!--                android:layout_width="40dp"-->
-<!--                android:layout_height="40dp"-->
-<!--                android:src="@mipmap/camera_flash_off" />-->
+        <ImageButton
+            android:id="@+id/camera_capture_button"
+            android:layout_width="@dimen/round_button_large"
+            android:layout_height="@dimen/round_button_large"
+            android:layout_marginEnd="168dp"
+            android:background="@drawable/ic_shutter"
+            android:contentDescription="@string/capture_button_alt"
+            android:scaleType="fitXY"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.962" />
 
-<!--            <ImageView-->
-<!--                android:id="@+id/iv_camera_take"-->
-<!--                android:layout_width="72dp"-->
-<!--                android:layout_height="72dp"-->
-<!--                android:layout_margin="32dp"-->
-<!--                android:src="@mipmap/camera_take" />-->
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-<!--            <ImageView-->
-<!--                android:id="@+id/iv_camera_close"-->
-<!--                android:layout_width="40dp"-->
-<!--                android:layout_height="40dp"-->
-<!--                android:src="@mipmap/camera_close" />-->
-
-<!--        </LinearLayout>-->
-
-<!--        &lt;!&ndash;拍照后操作布局&ndash;&gt;-->
-<!--        <LinearLayout-->
-<!--            android:id="@+id/ll_camera_result"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="match_parent"-->
-<!--            android:gravity="center"-->
-<!--            android:orientation="vertical"-->
-<!--            android:visibility="gone">-->
-
-<!--            <ImageView-->
-<!--                android:id="@+id/iv_camera_result_ok"-->
-<!--                android:layout_width="40dp"-->
-<!--                android:layout_height="40dp"-->
-<!--                android:src="@mipmap/camera_result_ok" />-->
-
-<!--            <ImageView-->
-<!--                android:id="@+id/iv_camera_result_cancel"-->
-<!--                android:layout_width="40dp"-->
-<!--                android:layout_height="40dp"-->
-<!--                android:layout_marginTop="80dp"-->
-<!--                android:src="@mipmap/camera_result_cancel" />-->
-
-<!--        </LinearLayout>-->
-
-<!--    </FrameLayout>-->
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

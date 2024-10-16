@@ -44,7 +44,9 @@
         <item>GPU</item>
         <item>NNAPI</item>
     </string-array>
-
+    <string name="capture_button_alt">Capture</string>
+    <string name="switch_camera_button_alt">Switch camera</string>
+    <string name="gallery_button_alt">Gallery</string>
     <string-array name="models_spinner_titles">
         <item>MobileNet V1</item>
         <item>EfficientDet Lite0</item>

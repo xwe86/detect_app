@@ -24,6 +24,8 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.*
 import android.view.animation.LinearInterpolator
@@ -52,7 +54,6 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
 
     private val fragmentCameraBinding
         get() = _fragmentCameraBinding!!
-
     private lateinit var objectDetectorHelper: ObjectDetectorHelper
     private lateinit var bitmapBuffer: Bitmap
     private var preview: Preview? = null
@@ -62,6 +63,11 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
 
     /** Blocking camera operations are performed using this executor */
     private lateinit var cameraExecutor: ExecutorService
+
+
+    private var lastRecordTime = 0L // 上次记录的时间戳
+    private val handler = Handler(Looper.getMainLooper())
+
 
     override fun onResume() {
         super.onResume()
@@ -82,30 +88,48 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
     }
 
     override fun onCreateView(
-      inflater: LayoutInflater,
-      container: ViewGroup?,
-      savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View {
         _fragmentCameraBinding = FragmentCameraBinding.inflate(inflater, container, false)
-        windowManager =  requireContext().getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        windowManager = requireContext().getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
+        playLeft()
+        playRight()
+        return fragmentCameraBinding.root
+    }
+
+    private fun playLeft() {
         val animatorSet = AnimatorSet()
-
-        val imageView = fragmentCameraBinding.arrowLeft
-        val translationAnim = ObjectAnimator.ofFloat(imageView, "translationX", 400f, 200f)
-//        translationAnim.repeatMode = ValueAnimator.REVERSE // 设置重复模式为倒序
+        val imageView = fragmentCameraBinding.arrowTop
+        imageView.visibility = View.VISIBLE
+        val translationAnim = ObjectAnimator.ofFloat(imageView, "translationY", 200f, 50f)
         translationAnim.repeatCount = ValueAnimator.INFINITE // 设置重复次数为无限
         translationAnim.duration = 1000 // 设置动画持续时间
         translationAnim.interpolator = LinearInterpolator() // 设置插值器，可以使动画匀速播放
-
         val alphaAnim = ObjectAnimator.ofFloat(imageView, "alpha", 1.0f, 0.0f)
         alphaAnim.repeatCount = ValueAnimator.INFINITE
         alphaAnim.duration = 1000
-
         animatorSet.playTogether(translationAnim, alphaAnim)
         // 设置目标View,播放动画
         animatorSet.start()
-        return fragmentCameraBinding.root
+    }
+
+    private fun playRight() {
+        val animatorSet = AnimatorSet()
+        val imageView = fragmentCameraBinding.arrowBottom
+        imageView.visibility = View.VISIBLE
+        val translationAnim = ObjectAnimator.ofFloat(imageView, "translationY", 680f, 830f)
+        translationAnim.repeatCount = ValueAnimator.INFINITE // 设置重复次数为无限
+        translationAnim.duration = 1000 // 设置动画持续时间
+        translationAnim.interpolator = LinearInterpolator() // 设置插值器，可以使动画匀速播放
+        val alphaAnim = ObjectAnimator.ofFloat(imageView, "alpha", 1.0f, 0.0f)
+        alphaAnim.repeatCount = ValueAnimator.INFINITE
+        alphaAnim.duration = 1000
+        animatorSet.playTogether(translationAnim, alphaAnim)
+        // 设置目标View,播放动画
+        animatorSet.start()
     }
 
     @SuppressLint("MissingPermission")
@@ -114,7 +138,8 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
 
         objectDetectorHelper = ObjectDetectorHelper(
             context = requireContext(),
-            objectDetectorListener = this)
+            objectDetectorListener = this
+        )
 
         // Initialize our background executor
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -238,6 +263,7 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
             ContextCompat.getMainExecutor(requireContext())
         )
     }
+
     // 获取当前屏幕方向
     fun isLandscape(): Boolean {
         val orientation = resources.configuration.orientation
@@ -272,17 +298,9 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
             Surface.ROTATION_270 -> 270
             else -> 0
         }
-        Log.d("相机","屏幕旋转的角度：${rotation}")
+        Log.d("相机", "屏幕旋转的角度：${rotation}")
 
 
-// 在 Activity 中调用 isLandscape() 函数判断屏幕方向
-        if (isLandscape()) {
-            // 屏幕为横屏
-            // 执行横屏时的逻辑
-        } else {
-            // 屏幕为竖屏
-            // 执行竖屏时的逻辑
-        }
         //   分析相机捕获的图像帧 ImageAnalysis. Using RGBA 8888 to match how our models work
         imageAnalyzer =
             ImageAnalysis.Builder()
@@ -298,9 +316,9 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
                             // The image rotation and RGB image buffer are initialized only once
                             // the analyzer has started running
                             bitmapBuffer = Bitmap.createBitmap(
-                              image.width,
-                              image.height,
-                              Bitmap.Config.ARGB_8888
+                                image.width,
+                                image.height,
+                                Bitmap.Config.ARGB_8888
                             )
                         }
 
@@ -323,6 +341,7 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
         }
     }
 
+    //接收到图像调用识别helper 进行识别
     private fun detectObjects(image: ImageProxy) {
         // Copy out RGB bits to the shared bitmap buffer
         image.use { bitmapBuffer.copyPixelsFromBuffer(image.planes[0].buffer) }
@@ -332,6 +351,7 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
         objectDetectorHelper.detect(bitmapBuffer, imageRotation)
     }
 
+
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         imageAnalyzer?.targetRotation = fragmentCameraBinding.viewFinder.display.rotation
@@ -340,16 +360,25 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
     // Update UI after objects have been detected. Extracts original image height/width
     // to scale and place bounding boxes properly through OverlayView
     override fun onResults(
-      results: MutableList<Detection>?,
-      inferenceTime: Long,
-      imageHeight: Int,
-      imageWidth: Int
+        results: MutableList<Detection>?,
+        inferenceTime: Long,
+        imageHeight: Int,
+        imageWidth: Int
     ) {
         activity?.runOnUiThread {
 //            fragmentCameraBinding.bottomSheetLayout.inferenceTimeVal.text =
 //                            String.format("%d ms", inferenceTime)
             fragmentCameraBinding.inferenceTimeVal.text =
-                    String.format("%d ms", inferenceTime)
+                String.format("%d ms", inferenceTime)
+
+            //处理识别结果
+            val currentTime = System.currentTimeMillis()
+            // 每秒更新一次提示
+            if (currentTime - lastRecordTime >= 1000) {
+                // 处理图像并记录结果
+                recordAnalysisResult(results, "" + lastRecordTime)
+                lastRecordTime = currentTime
+            }
 
             // Pass necessary information to OverlayView for drawing on the canvas
             fragmentCameraBinding.overlay.setResults(
@@ -361,6 +390,48 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
             // Force a redraw
             fragmentCameraBinding.overlay.invalidate()
         }
+    }
+
+    // 定时器，每秒触发一次
+    private val timerRunnable = object : Runnable {
+        override fun run() {
+            handler.postDelayed(this, 1000)
+        }
+    }
+
+    private fun recordAnalysisResult(
+        results: MutableList<Detection>?,
+        recordAnalysisResult: String
+    ) {
+        // 处理图像并记录结果的逻辑
+        Log.d("", "记录时间戳 ${recordAnalysisResult}")
+        fragmentCameraBinding.detectTip.text = recordAnalysisResult
+        val drawableText = ""
+        for (result in results ?: LinkedList<Detection>()) {
+            val boundingBox = result.boundingBox
+            var scaleFactor: Float = 1f
+            val top = boundingBox.top * scaleFactor
+            val bottom = boundingBox.bottom * scaleFactor
+            val left = boundingBox.left * scaleFactor
+            val right = boundingBox.right * scaleFactor
+
+            val drawableText =
+                result.categories[0].label + " " + String.format("%.2f", result.categories[0].score)+
+                        "top :$top bottom: $bottom left: $left right: $right"
+        }
+        fragmentCameraBinding.detectData.text = drawableText
+
+    }
+
+
+//    override fun onResume() {
+//        super.onResume()
+//        handler.post(timerRunnable)
+//    }
+
+    override fun onPause() {
+        super.onPause()
+        handler.removeCallbacks(timerRunnable)
     }
 
     override fun onError(error: String) {

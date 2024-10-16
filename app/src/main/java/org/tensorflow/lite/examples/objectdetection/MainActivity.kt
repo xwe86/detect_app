@@ -18,7 +18,12 @@ package org.tensorflow.lite.examples.objectdetection
 
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
 import org.tensorflow.lite.examples.objectdetection.databinding.ActivityMainBinding
 
 /**
@@ -28,7 +33,9 @@ import org.tensorflow.lite.examples.objectdetection.databinding.ActivityMainBind
 class MainActivity : AppCompatActivity() {
 
     private lateinit var activityMainBinding: ActivityMainBinding
-
+    private var lastRecordTime = 0L // 上次记录的时间戳
+    private val handler = Handler(Looper.getMainLooper())
+    private lateinit var imageAnalysis: ImageAnalysis
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         activityMainBinding = ActivityMainBinding.inflate(layoutInflater)
@@ -44,4 +51,8 @@ class MainActivity : AppCompatActivity() {
             super.onBackPressed()
         }
     }
+
+
+
+
 }

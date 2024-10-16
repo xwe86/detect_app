@@ -20,6 +20,7 @@ import android.content.res.AssetManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.RectF
+import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import java.io.InputStream
@@ -116,6 +117,7 @@ class TFObjectDetectionTest {
                         ) {
                             assertNotNull(results)
                             for (result in results!!) {
+                                Log.i("","目标位置${result.boundingBox.top} ,${result.boundingBox.bottom} ")
                                 assertTrue(result.boundingBox.top <= imageHeight)
                                 assertTrue(result.boundingBox.bottom <= imageHeight)
                                 assertTrue(result.boundingBox.left <= imageWidth)

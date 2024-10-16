@@ -33,17 +33,17 @@
         android:layout_height="match_parent">
 
         <!-- Chevron indicating that the bottom sheet is expandable -->
-        <RelativeLayout
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent">
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:layout_centerVertical="true"
-                android:src="@drawable/icn_chevron_up"
-                android:contentDescription="@string/alt_bottom_sheet_chevron" />
-        </RelativeLayout>
+<!--        <RelativeLayout-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_width="match_parent">-->
+<!--            <ImageView-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_centerHorizontal="true"-->
+<!--                android:layout_centerVertical="true"-->
+<!--                android:src="@drawable/icn_chevron_up"-->
+<!--                android:contentDescription="@string/alt_bottom_sheet_chevron" />-->
+<!--        </RelativeLayout>-->
 
         <!-- Inference time row -->
         <androidx.appcompat.widget.LinearLayoutCompat
