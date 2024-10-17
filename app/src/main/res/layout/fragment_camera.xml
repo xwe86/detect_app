@@ -30,16 +30,6 @@
 
     </androidx.camera.view.PreviewView>
 
-    <TextView
-        android:id="@+id/inference_time_val"
-        android:layout_width="match_parent"
-        android:layout_height="340dp"
-        android:layout_centerVertical="true"
-        android:gravity="end"
-        android:text="0ms"
-        android:textColor="@color/bottom_sheet_text_color"
-        android:textSize="@dimen/bottom_sheet_text_size" />
-
 
 
 
@@ -57,36 +47,66 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/detect_tip"
-            android:layout_width="100dp"
-            android:layout_height="80dp"
-            android:layout_marginLeft="-10dp"
-            android:layout_marginTop="300dp"
-            android:rotation="90"
-            android:text="识别提示"
-            android:textAlignment="viewStart"
-            android:textColor="@color/detect_tip"
-            android:textSize="@dimen/detect_tip_text_size"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
+        <!-- 第一个 TextView -->
         <TextView
             android:id="@+id/detect_data"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:layout_marginEnd="30dp"
+            android:layout_marginTop="30dp"
+            android:text="识别内容"
+            android:rotation="90"
+            android:textColor="@color/detect_data"
+            android:textSize="@dimen/detect_data_text_size"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true" />
+
+        <!-- 第二个 TextView -->
+        <TextView
+            android:id="@+id/inference_time_val"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="0dp"
-            android:layout_marginTop="30dp"
-            android:ellipsize="end"
+            android:layout_marginEnd="30dp"
+            android:layout_marginBottom="50dp"
+            android:layout_centerVertical="true"
+            android:gravity="end"
             android:rotation="90"
-            android:text="识别结果："
+            android:text="0ms"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/detect_tip_text_size"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true" />
+
+
+
+
+        <!-- 第三个 TextView -->
+        <TextView
+            android:id="@+id/detect_tip"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_marginEnd="330dp"
+            android:layout_marginTop="300dp"
+            android:text=""
+            android:rotation="90"
             android:textColor="@color/detect_data"
             android:textSize="@dimen/detect_tip_text_size"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true" />
+
+
+
+
 
 
 

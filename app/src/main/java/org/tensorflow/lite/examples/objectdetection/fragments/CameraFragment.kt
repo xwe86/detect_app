@@ -51,7 +51,7 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
     private val TAG = "ObjectDetection"
     private lateinit var windowManager: WindowManager
     private var _fragmentCameraBinding: FragmentCameraBinding? = null
-
+    private val animatorSet: AnimatorSet = AnimatorSet()
     private val fragmentCameraBinding
         get() = _fragmentCameraBinding!!
     private lateinit var objectDetectorHelper: ObjectDetectorHelper
@@ -95,17 +95,36 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
         _fragmentCameraBinding = FragmentCameraBinding.inflate(inflater, container, false)
         windowManager = requireContext().getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
-        playLeft()
-        playRight()
+
+//        playRight()
+        // 显示"请靠近"文案
+        handler.postDelayed({
+            // 在这里更新UI显示"请靠近"文案
+            showTipsText("请靠近")
+        }, 3000)
+
+        // 显示"向左移动相机"文案
+        handler.postDelayed({
+            playLeft()
+            // 在这里更新UI显示"向左移动相机"文案
+            showTipsText("向左移动相机")
+        }, 8000)
+
+        // 显示"识别成功"文案
+        handler.postDelayed({
+            playLeftStop()
+            // 在这里更新UI显示"识别成功"文案
+            showTipsText("识别成功")
+        }, 10000)
         return fragmentCameraBinding.root
     }
 
     private fun playLeft() {
-        val animatorSet = AnimatorSet()
+//        val animatorSet = AnimatorSet()
         val imageView = fragmentCameraBinding.arrowTop
         imageView.visibility = View.VISIBLE
         val translationAnim = ObjectAnimator.ofFloat(imageView, "translationY", 200f, 50f)
-        translationAnim.repeatCount = ValueAnimator.INFINITE // 设置重复次数为无限
+        translationAnim.repeatCount = 3 // 设置重复次数为无限
         translationAnim.duration = 1000 // 设置动画持续时间
         translationAnim.interpolator = LinearInterpolator() // 设置插值器，可以使动画匀速播放
         val alphaAnim = ObjectAnimator.ofFloat(imageView, "alpha", 1.0f, 0.0f)
@@ -116,21 +135,28 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
         animatorSet.start()
     }
 
-    private fun playRight() {
-        val animatorSet = AnimatorSet()
-        val imageView = fragmentCameraBinding.arrowBottom
-        imageView.visibility = View.VISIBLE
-        val translationAnim = ObjectAnimator.ofFloat(imageView, "translationY", 680f, 830f)
-        translationAnim.repeatCount = ValueAnimator.INFINITE // 设置重复次数为无限
-        translationAnim.duration = 1000 // 设置动画持续时间
-        translationAnim.interpolator = LinearInterpolator() // 设置插值器，可以使动画匀速播放
-        val alphaAnim = ObjectAnimator.ofFloat(imageView, "alpha", 1.0f, 0.0f)
-        alphaAnim.repeatCount = ValueAnimator.INFINITE
-        alphaAnim.duration = 1000
-        animatorSet.playTogether(translationAnim, alphaAnim)
+    private fun playLeftStop() {
+        val imageView = fragmentCameraBinding.arrowTop
+        imageView.visibility = View.INVISIBLE
         // 设置目标View,播放动画
-        animatorSet.start()
+        animatorSet.cancel()
     }
+
+//    private fun playRight() {
+//        val animatorSet = AnimatorSet()
+//        val imageView = fragmentCameraBinding.arrowBottom
+//        imageView.visibility = View.VISIBLE
+//        val translationAnim = ObjectAnimator.ofFloat(imageView, "translationY", 680f, 830f)
+//        translationAnim.repeatCount = ValueAnimator.INFINITE // 设置重复次数为无限
+//        translationAnim.duration = 1000 // 设置动画持续时间
+//        translationAnim.interpolator = LinearInterpolator() // 设置插值器，可以使动画匀速播放
+//        val alphaAnim = ObjectAnimator.ofFloat(imageView, "alpha", 1.0f, 0.0f)
+//        alphaAnim.repeatCount = ValueAnimator.INFINITE
+//        alphaAnim.duration = 1000
+//        animatorSet.playTogether(translationAnim, alphaAnim)
+//        // 设置目标View,播放动画
+//        animatorSet.start()
+//    }
 
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -399,14 +425,22 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
         }
     }
 
+
+    /**
+     * 设置提示文案
+     */
+    fun showTipsText(text: String) {
+        fragmentCameraBinding.detectTip.text = text
+    }
+
+
     private fun recordAnalysisResult(
         results: MutableList<Detection>?,
         recordAnalysisResult: String
     ) {
         // 处理图像并记录结果的逻辑
-        Log.d("", "记录时间戳 ${recordAnalysisResult}")
-        fragmentCameraBinding.detectTip.text = recordAnalysisResult
-        val drawableText = ""
+        Log.d("", "记录时间戳 $recordAnalysisResult")
+        var drawableText = ""
         for (result in results ?: LinkedList<Detection>()) {
             val boundingBox = result.boundingBox
             var scaleFactor: Float = 1f
@@ -415,9 +449,13 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
             val left = boundingBox.left * scaleFactor
             val right = boundingBox.right * scaleFactor
 
-            val drawableText =
-                result.categories[0].label + " " + String.format("%.2f", result.categories[0].score)+
-                        "top :$top bottom: $bottom left: $left right: $right"
+//            drawableText =
+//                result.categories[0].label + " " + String.format(
+//                    "%.2f",
+//                    result.categories[0].score
+//                ) +
+//                        "top :$top bottom: $bottom left: $left right: $right"
+            drawableText = result.categories[0].label + " "
         }
         fragmentCameraBinding.detectData.text = drawableText
 
