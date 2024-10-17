@@ -21,7 +21,7 @@
     <color name="toolbar_background">#EEEEEE</color>
     <color name="ic_launcher_background">#FFFFFF</color>
     <color name="bottom_sheet_background">#EEEEEE</color>
-    <color name="bottom_sheet_text_color">@android:color/holo_blue_dark</color>
+    <color name="bottom_sheet_text_color">@android:color/holo_green_dark</color>
     <color name="detect_tip">#FFFFF2</color>
     <color name="icActive">#FFFFFFFF</color>
     <color name="icFocused">#DDFFFFFF</color>
@@ -29,7 +29,7 @@
     <color name="preview_mock">#9a000000</color>
     <color name="color_000000">#000000</color>
     <color name="color_afff">#afff</color>
-    <color name="detect_data">#03A9F4</color>
+    <color name="detect_data">@android:color/holo_red_dark </color>
 
 
 </resources>

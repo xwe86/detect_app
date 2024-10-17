@@ -55,6 +55,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
 
@@ -79,7 +82,9 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
 
     private var lastRecordTime = 0L // 上次记录的时间戳
     private val handler = Handler(Looper.getMainLooper())
-
+    private var tipColseTime = 3000L
+    private var tipLeftTime = 3000L
+    private var tipOKTime = 3000L
 
     override fun onResume() {
         super.onResume()
@@ -115,30 +120,30 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
         handler.postDelayed({
             // 在这里更新UI显示"请靠近"文案
             showTipsText("请靠近")
-        }, 3000)
+        }, tipColseTime)
 
         // 显示"向左移动相机"文案
         handler.postDelayed({
             playLeft()
             // 在这里更新UI显示"向左移动相机"文案
             showTipsText("向左移动相机")
-        }, 8000)
+        }, tipColseTime +tipLeftTime)
 
         // 显示"识别成功"文案
         handler.postDelayed({
             playLeftStop()
             // 在这里更新UI显示"识别成功"文案
             showTipsText("识别成功")
-        }, 10000)
+        }, tipColseTime +tipLeftTime +tipOKTime)
         return fragmentCameraBinding.root
     }
 
     private fun playLeft() {
 //        val animatorSet = AnimatorSet()
-        val imageView = fragmentCameraBinding.arrowTop
+        val imageView = fragmentCameraBinding.arrowLeft
         imageView.visibility = View.VISIBLE
-        val translationAnim = ObjectAnimator.ofFloat(imageView, "translationY", 200f, 50f)
-        translationAnim.repeatCount = 3 // 设置重复次数为无限
+        val translationAnim = ObjectAnimator.ofFloat(imageView, "translationX", 200f, 50f)
+        translationAnim.repeatCount = 10 // 设置重复次数为无限
         translationAnim.duration = 1000 // 设置动画持续时间
         translationAnim.interpolator = LinearInterpolator() // 设置插值器，可以使动画匀速播放
         val alphaAnim = ObjectAnimator.ofFloat(imageView, "alpha", 1.0f, 0.0f)
@@ -150,7 +155,7 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
     }
 
     private fun playLeftStop() {
-        val imageView = fragmentCameraBinding.arrowTop
+        val imageView = fragmentCameraBinding.arrowLeft
         imageView.visibility = View.INVISIBLE
         // 设置目标View,播放动画
         animatorSet.cancel()
@@ -319,7 +324,11 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
         // CameraProvider
         val cameraProvider =
             cameraProvider ?: throw IllegalStateException("Camera initialization failed.")
+        val metrics = windowManager.getCurrentWindowMetrics().bounds
+        val screenAspectRatio = aspectRatio(metrics.width(), metrics.height())
+        Log.d(TAG, "Preview aspect ratio: $screenAspectRatio")
 
+        val rotation = fragmentCameraBinding.viewFinder.display.rotation
         // CameraSelector - makes assumption that we're only using the back camera
         val cameraSelector =
             CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build()
@@ -331,14 +340,20 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
                 .setTargetRotation(Surface.ROTATION_0)
                 .build()
         // 获取屏幕旋转角度
-        val rotation = when (windowManager.defaultDisplay.rotation) {
-            Surface.ROTATION_0 -> 0
-            Surface.ROTATION_90 -> 90
-            Surface.ROTATION_180 -> 180
-            Surface.ROTATION_270 -> 270
-            else -> 0
-        }
+
         Log.d("相机", "屏幕旋转的角度：${rotation}")
+
+
+        // ImageCapture
+        imageCapture = ImageCapture.Builder()
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+            // We request aspect ratio but no resolution to match preview config, but letting
+            // CameraX optimize for whatever specific resolution best fits our use cases
+            .setTargetAspectRatio(screenAspectRatio)
+            // Set initial target rotation, we will have to call this again if rotation changes
+            // during the lifecycle of this use case
+            .setTargetRotation(rotation)
+            .build()
 
 
         //   分析相机捕获的图像帧 ImageAnalysis. Using RGBA 8888 to match how our models work
@@ -443,6 +458,25 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
         }
     }
 
+
+    /**
+     *  [androidx.camera.core.ImageAnalysis.Builder] requires enum value of
+     *  [androidx.camera.core.AspectRatio]. Currently it has values of 4:3 & 16:9.
+     *
+     *  Detecting the most suitable ratio for dimensions provided in @params by counting absolute
+     *  of preview ratio to one of the provided values.
+     *
+     *  @param width - preview width
+     *  @param height - preview height
+     *  @return suitable aspect ratio
+     */
+    private fun aspectRatio(width: Int, height: Int): Int {
+        val previewRatio = max(width, height).toDouble() / min(width, height)
+        if (abs(previewRatio - RATIO_4_3_VALUE) <= abs(previewRatio - RATIO_16_9_VALUE)) {
+            return AspectRatio.RATIO_4_3
+        }
+        return AspectRatio.RATIO_16_9
+    }
     //接收到图像调用识别helper 进行识别
     private fun detectObjects(image: ImageProxy) {
         // Copy out RGB bits to the shared bitmap buffer
@@ -517,7 +551,8 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
     ) {
         // 处理图像并记录结果的逻辑
         Log.d("", "记录时间戳 $recordAnalysisResult")
-        var drawableText = ""
+        // 创建一个 Set 集合，用于存放 List 中的数据
+        val dataSet = HashSet<String>()
         for (result in results ?: LinkedList<Detection>()) {
             val boundingBox = result.boundingBox
             var scaleFactor: Float = 1f
@@ -532,9 +567,12 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
 //                    result.categories[0].score
 //                ) +
 //                        "top :$top bottom: $bottom left: $left right: $right"
-            drawableText = result.categories[0].label + " "
+            dataSet.add(result.categories[0].label)
         }
-        fragmentCameraBinding.detectData.text = drawableText
+
+
+        fragmentCameraBinding.detectData.text =  dataSet.joinToString(separator = ", ")
+
 
     }
 

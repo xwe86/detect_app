@@ -37,17 +37,18 @@
         android:id="@+id/detect_tip"
         android:layout_width="match_parent"
         android:layout_height="126dp"
+        android:layout_marginLeft="280dp"
+        android:layout_marginTop="330dp"
         android:text="识别提示"
-        android:textColor="@color/bottom_sheet_text_color"
+        android:textColor="@color/detect_tip"
         android:textSize="@dimen/detect_tip_text_size" />
     <TextView
         android:id="@+id/detect_data"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="0dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="130dp"
         android:ellipsize="end"
-        android:rotation="90"
         android:text="识别结果："
         android:textColor="@color/detect_data"
         android:textSize="@dimen/detect_tip_text_size"
@@ -69,6 +70,7 @@
         android:layout_height="50dp"
         android:layout_marginTop="20dp"
         android:layout_marginRight="20dp"
+        android:visibility="invisible"
         android:src="@drawable/arrow_left" />
 
     <ImageView
@@ -108,7 +110,9 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        app:layout_anchor="@+id/view_finder"
+        app:layout_anchorGravity="center">
         <!-- Camera control and gallery buttons -->
 
 
