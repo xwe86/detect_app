@@ -20,12 +20,19 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
+import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.hardware.display.DisplayManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.MediaStore
 import android.util.Log
 import android.view.*
 import android.view.animation.LinearInterpolator
@@ -37,11 +44,14 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
+import com.android.example.cameraxbasic.utils.ANIMATION_FAST_MILLIS
+import com.android.example.cameraxbasic.utils.ANIMATION_SLOW_MILLIS
 import org.tensorflow.lite.examples.objectdetection.ObjectDetectorHelper
 import org.tensorflow.lite.examples.objectdetection.R
 import org.tensorflow.lite.examples.objectdetection.databinding.ActivityMainBinding
 import org.tensorflow.lite.examples.objectdetection.databinding.FragmentCameraBinding
 import org.tensorflow.lite.task.vision.detector.Detection
+import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -56,7 +66,9 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
         get() = _fragmentCameraBinding!!
     private lateinit var objectDetectorHelper: ObjectDetectorHelper
     private lateinit var bitmapBuffer: Bitmap
+    private var displayId: Int = -1
     private var preview: Preview? = null
+    private var imageCapture: ImageCapture? = null
     private var imageAnalyzer: ImageAnalysis? = null
     private var camera: Camera? = null
     private var cameraProvider: ProcessCameraProvider? = null
@@ -86,6 +98,8 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
         // Shut down our background executor
         cameraExecutor.shutdown()
     }
+
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -351,6 +365,68 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
                         detectObjects(image)
                     }
                 }
+        // Listener for button used to capture photo
+        fragmentCameraBinding?.cameraCaptureButton?.setOnClickListener {
+
+            // Get a stable reference of the modifiable image capture use case
+            imageCapture?.let { imageCapture ->
+
+                // Create time stamped name and MediaStore entry.
+                val name = SimpleDateFormat(FILENAME, Locale.US)
+                    .format(System.currentTimeMillis())
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+                    put(MediaStore.MediaColumns.MIME_TYPE, PHOTO_TYPE)
+                    if(Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                        val appName = "test"
+                        put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/${appName}")
+                    }
+                }
+
+                // Create output options object which contains file + metadata
+                val outputOptions = ImageCapture.OutputFileOptions
+                    .Builder(requireContext().contentResolver,
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        contentValues)
+                    .build()
+
+                // Setup image capture listener which is triggered after photo has been taken
+                imageCapture.takePicture(
+                    outputOptions, cameraExecutor, object : ImageCapture.OnImageSavedCallback {
+                        override fun onError(exc: ImageCaptureException) {
+                            Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
+                        }
+
+                        override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                            val savedUri = output.savedUri
+                            Log.d(TAG, "Photo capture succeeded: $savedUri")
+
+
+                            // Implicit broadcasts will be ignored for devices running API level >= 24
+                            // so if you only target API level 24+ you can remove this statement
+                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+                                // Suppress deprecated Camera usage needed for API level 23 and below
+                                @Suppress("DEPRECATION")
+                                requireActivity().sendBroadcast(
+                                    Intent(android.hardware.Camera.ACTION_NEW_PICTURE, savedUri)
+                                )
+                            }
+                        }
+                    })
+
+                // We can only change the foreground Drawable using API level 23+ API
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+                    // Display flash animation to indicate that photo was captured
+                    fragmentCameraBinding.root.postDelayed({
+                        fragmentCameraBinding.root.foreground = ColorDrawable(Color.WHITE)
+                        fragmentCameraBinding.root.postDelayed(
+                            { fragmentCameraBinding.root.foreground = null }, ANIMATION_FAST_MILLIS
+                        )
+                    }, ANIMATION_SLOW_MILLIS)
+                }
+            }
+        }
 
         // Must unbind the use-cases before rebinding them
         cameraProvider.unbindAll()
@@ -468,6 +544,23 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
 //        handler.post(timerRunnable)
 //    }
 
+
+    /**
+     * We need a display listener for orientation changes that do not trigger a configuration
+     * change, for example if we choose to override config change in manifest or for 180-degree
+     * orientation changes.
+     */
+    private val displayListener = object : DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) = Unit
+        override fun onDisplayRemoved(displayId: Int) = Unit
+        override fun onDisplayChanged(displayId: Int) = view?.let { view ->
+            if (displayId == this@CameraFragment.displayId) {
+                Log.d(TAG, "Rotation changed: ${view.display.rotation}")
+                imageCapture?.targetRotation = view.display.rotation
+                imageAnalyzer?.targetRotation = view.display.rotation
+            }
+        } ?: Unit
+    }
     override fun onPause() {
         super.onPause()
         handler.removeCallbacks(timerRunnable)
@@ -477,5 +570,12 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
         activity?.runOnUiThread {
             Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
         }
+    }
+    companion object {
+        private const val TAG = "CameraXBasic"
+        private const val FILENAME = "yyyy-MM-dd-HH-mm-ss-SSS"
+        private const val PHOTO_TYPE = "image/jpeg"
+        private const val RATIO_4_3_VALUE = 4.0 / 3.0
+        private const val RATIO_16_9_VALUE = 16.0 / 9.0
     }
 }

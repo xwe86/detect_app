@@ -29,10 +29,10 @@ import org.tensorflow.lite.task.vision.detector.ObjectDetector
 
 class ObjectDetectorHelper(
   var threshold: Float = 0.5f,
-  var numThreads: Int = 2,
-  var maxResults: Int = 3,
+  var numThreads: Int = 4,
+  var maxResults: Int = 8,
   var currentDelegate: Int = 0,
-  var currentModel: Int = 1,
+  var currentModel: Int = 4,
   val context: Context,
   val objectDetectorListener: DetectorListener?
 ) {
