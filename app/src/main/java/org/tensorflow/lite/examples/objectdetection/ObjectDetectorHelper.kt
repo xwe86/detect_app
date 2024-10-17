@@ -32,7 +32,7 @@ class ObjectDetectorHelper(
   var numThreads: Int = 2,
   var maxResults: Int = 3,
   var currentDelegate: Int = 0,
-  var currentModel: Int = 4,
+  var currentModel: Int = 1,
   val context: Context,
   val objectDetectorListener: DetectorListener?
 ) {

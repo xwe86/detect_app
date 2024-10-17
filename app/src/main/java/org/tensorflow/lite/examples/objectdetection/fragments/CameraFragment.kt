@@ -314,7 +314,7 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
         preview =
             Preview.Builder()
                 .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                .setTargetRotation(Surface.ROTATION_90)
+                .setTargetRotation(Surface.ROTATION_0)
                 .build()
         // 获取屏幕旋转角度
         val rotation = when (windowManager.defaultDisplay.rotation) {
@@ -331,7 +331,7 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
         imageAnalyzer =
             ImageAnalysis.Builder()
                 .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                .setTargetRotation(Surface.ROTATION_90)
+                .setTargetRotation(Surface.ROTATION_0)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setOutputImageFormat(OUTPUT_IMAGE_FORMAT_RGBA_8888)
                 .build()
