@@ -3,7 +3,7 @@ package org.tensorflow.lite.examples.objectdetection.util
 import android.content.Context
 
 
-object ScreenUtils {
+class ScreenUtils {
     /**
      * 获取屏幕宽度（px）
      *
