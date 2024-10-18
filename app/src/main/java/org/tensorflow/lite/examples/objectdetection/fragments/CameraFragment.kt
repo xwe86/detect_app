@@ -443,6 +443,75 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
             }
         }
 
+
+        // photoViewButton
+        fragmentCameraBinding?.photoViewButton?.setOnClickListener {
+
+            // Get a stable reference of the modifiable image capture use case
+            imageCapture?.let { imageCapture ->
+
+                // Create time stamped name and MediaStore entry.
+                val name = SimpleDateFormat(FILENAME, Locale.US)
+                    .format(System.currentTimeMillis())
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+                    put(MediaStore.MediaColumns.MIME_TYPE, PHOTO_TYPE)
+                    if(Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                        val appName = "test"
+                        put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/${appName}")
+                    }
+                }
+
+                // Create output options object which contains file + metadata
+                val outputOptions = ImageCapture.OutputFileOptions
+                    .Builder(requireContext().contentResolver,
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        contentValues)
+                    .build()
+
+                // Setup image capture listener which is triggered after photo has been taken
+                imageCapture.takePicture(
+                    outputOptions, cameraExecutor, object : ImageCapture.OnImageSavedCallback {
+                        override fun onError(exc: ImageCaptureException) {
+                            Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
+                        }
+
+                        override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                            val savedUri = output.savedUri
+                            Log.d(TAG, "Photo capture succeeded: $savedUri")
+
+                            // We can only change the foreground Drawable using API level 23+ API
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                // Update the gallery thumbnail with latest picture taken
+                                setGalleryThumbnail(savedUri.toString())
+                            }
+
+                            // Implicit broadcasts will be ignored for devices running API level >= 24
+                            // so if you only target API level 24+ you can remove this statement
+                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+                                // Suppress deprecated Camera usage needed for API level 23 and below
+                                @Suppress("DEPRECATION")
+                                requireActivity().sendBroadcast(
+                                    Intent(android.hardware.Camera.ACTION_NEW_PICTURE, savedUri)
+                                )
+                            }
+                        }
+                    })
+
+                // We can only change the foreground Drawable using API level 23+ API
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+                    // Display flash animation to indicate that photo was captured
+                    fragmentCameraBinding.root.postDelayed({
+                        fragmentCameraBinding.root.foreground = ColorDrawable(Color.WHITE)
+                        fragmentCameraBinding.root.postDelayed(
+                            { fragmentCameraBinding.root.foreground = null }, ANIMATION_FAST_MILLIS
+                        )
+                    }, ANIMATION_SLOW_MILLIS)
+                }
+            }
+        }
+
         // Must unbind the use-cases before rebinding them
         cameraProvider.unbindAll()
 
@@ -458,7 +527,21 @@ class CameraFragment : Fragment(), ObjectDetectorHelper.DetectorListener {
         }
     }
 
-
+    private fun setGalleryThumbnail(filename: String) {
+//        // Run the operations in the view's thread
+//        cameraUiContainerBinding?.photoViewButton?.let { photoViewButton ->
+//            photoViewButton.post {
+//                // Remove thumbnail padding
+//                photoViewButton.setPadding(resources.getDimension(androidx.camera.core.R.dimen.stroke_small).toInt())
+//
+//                // Load thumbnail into circular button using Glide
+//                Glide.with(photoViewButton)
+//                    .load(filename)
+//                    .apply(RequestOptions.circleCropTransform())
+//                    .into(photoViewButton)
+//            }
+//        }
+    }
     /**
      *  [androidx.camera.core.ImageAnalysis.Builder] requires enum value of
      *  [androidx.camera.core.AspectRatio]. Currently it has values of 4:3 & 16:9.

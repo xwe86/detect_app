@@ -1,50 +1,114 @@
 package org.tensorflow.lite.examples.objectdetection
 
+import android.app.Activity
+import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Bundle
-import com.google.android.material.snackbar.Snackbar
+import android.text.TextUtils
+import android.view.View
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.findNavController
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
 import org.tensorflow.lite.examples.objectdetection.databinding.ActivityMain2Binding
+import org.tensorflow.lite.examples.objectdetection.databinding.ActivityMainBinding
 
 class MainActivity2 : AppCompatActivity() {
 
-    private lateinit var appBarConfiguration: AppBarConfiguration
-    private lateinit var binding: ActivityMain2Binding
+    private lateinit var activityMain2Binding: ActivityMain2Binding
+    private lateinit var resultLauncher: ActivityResultLauncher<Intent>
+
+
+    val TAKE_TYPE = "take_type" //拍摄类型标记
+
+    val IMAGE_PATH = "image_path" //图片路径标记
+
+    val TYPE_IDCARD_FRONT = 1 //身份证正面
+    val TYPE_IDCARD_BACK = 2 //身份证反面
+    val TYPE_LICENSE_PLATE = 3 //车牌
+
+
+    val RESULT_CODE = 0X11 //结果码
+
+    override fun onStart() {
+        super.onStart()
+
+//        activityMain2Binding.ivFrontButton.setOnClickListener {
+//            resultLauncher =
+//                registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+//                    if (result.resultCode == Activity.RESULT_OK) {
+//                        val data: Intent? = result.data
+//                        data?.let {
+//                            val result = it.getStringExtra("key")
+//                            // 处理返回的数据
+//                        }
+//                    }
+//                }
+//            val intent = Intent(this, MainActivity::class.java)
+//            resultLauncher.launch(intent)
+//        }
+//
+//        activityMain2Binding.ivBackButton.setOnClickListener {
+//            resultLauncher =
+//                registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+//                    if (result.resultCode == Activity.RESULT_OK) {
+//                        val data: Intent? = result.data
+//                        data?.let {
+//                            val result = it.getStringExtra("key")
+//                            // 处理返回的数据
+//                        }
+//                    }
+//                }
+//            val intent = Intent(this, MainActivity::class.java)
+//            resultLauncher.launch(intent)
+//        }
+
+
+        // 其他初始化工作
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        activityMain2Binding = ActivityMain2Binding.inflate(layoutInflater)
+        setContentView(activityMain2Binding.root)
 
-        binding = ActivityMain2Binding.inflate(layoutInflater)
-        setContentView(binding.root)
+        resultLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    val data: Intent? = result.data
+                    data?.let {
+                        val result = it.getStringExtra("key")
+                        // 处理返回的数据
+                    }
+                }
 
-//        setSupportActionBar(binding.toolbar)
+                if (result.resultCode == RESULT_CODE) {
+                    //获取图片路径，显示图片
+                    val path: String? = getImagePath(result.data)
+                    if (!TextUtils.isEmpty(path)) {
 
-
-        //findNavController() 方法用于查找与给定的 NavHostFragment 相关联的 NavController 对象。在这里，
-        // 它通过 R.id.nav_host_fragment_content_main 找到与主要导航组件相关联的 NavController
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
-        appBarConfiguration = AppBarConfiguration(navController.graph)
-        //：这个方法尝试导航一个步骤回到应用程序的导航图中的父级目的地。它会根据给定的 appBarConfiguration 来确定是否应该执行导航操作。
-        setupActionBarWithNavController(navController, appBarConfiguration)
-
-        //当用户点击 FAB 时，将执行接下来的代码块。
-        binding.fab.setOnClickListener { view ->
-            //是一个静态方法，用于创建并显示一个 Snackbar。
-            //view 参数是指定 Snackbar 将被附加到的视图。
-            //"Replace with your own action" 是 Snackbar 中显示的文本内容。
-            //Snackbar.LENGTH_LONG 表示 Snackbar 显示的时长为长时间
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null)
-                .setActionTextColor(R.id.fab).show()
+                        //实际开发中将图片上传到服务器成功后需要删除全部缓存图片
+//                FileUtils.clearCache(this);
+                    }
+                }
+            }
+        activityMain2Binding.ivBackButton.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            resultLauncher.launch(intent)
         }
+
+
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
-        return navController.navigateUp(appBarConfiguration)
-                || super.onSupportNavigateUp()
+
+    /**
+     * 获取图片路径
+     *
+     * @param data Intent
+     * @return 图片路径
+     */
+    private fun getImagePath(data: Intent?): String? {
+        return if (data != null) {
+            data.getStringExtra(IMAGE_PATH)
+        } else ""
     }
 }
